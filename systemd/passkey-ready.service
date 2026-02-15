@@ -1,0 +1,14 @@
+[Unit]
+Description=Set adapter discoverable and pairable for passkey support
+After=bluetooth-privacy.service
+Requires=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 1
+ExecStart=/bin/bash -c 'bluetoothctl discoverable on && bluetoothctl pairable on && bluetoothctl discoverable-timeout 0'
+ExecStartPost=/bin/bash -lc "pkill -f 'dbus-monitor.*org.bluez' 2>/dev/null || true; dbus-monitor --system \"sender='org.bluez'\" > /dev/null 2>&1 &"
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

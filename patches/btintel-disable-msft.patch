@@ -1,0 +1,16 @@
+--- a/drivers/bluetooth/btintel.c
++++ b/drivers/bluetooth/btintel.c
+@@ -2830,6 +2830,14 @@
+ void btintel_set_msft_opcode(struct hci_dev *hdev, u8 hw_variant)
+ {
++	/* Check if MSFT extensions have been disabled via btusb module param.
++	 * This prevents firmware-level passive BLE scanning on Intel adapters,
++	 * which can flood D-Bus with 100+ device objects and exhaust slots
++	 * needed for Chrome caBLE (iPhone passkey) authentication.
++	 */
++	if (hdev->msft_opcode_disabled)
++		return;
++
+ 	switch (hw_variant) {
+ 	/* Legacy bootloader devices that supports MSFT Extension */
+ 	case 0x11:	/* JfP */

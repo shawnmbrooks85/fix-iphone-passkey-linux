@@ -1,0 +1,19 @@
+[Unit]
+Description=Enable BLE Privacy (RPA) for passkey support
+After=bluetooth.service
+Requires=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStartPre=/bin/sleep 2
+ExecStart=/bin/bash -lc '\
+    timeout 5 btmgmt power off 2>/dev/null || true; \
+    sleep 1; \
+    timeout 5 btmgmt bondable on 2>/dev/null || true; \
+    timeout 5 btmgmt privacy on 2>/dev/null || true; \
+    sleep 1; \
+    timeout 5 btmgmt power on 2>/dev/null || true'
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

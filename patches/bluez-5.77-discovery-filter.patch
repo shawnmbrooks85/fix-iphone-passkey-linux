@@ -1,0 +1,11 @@
+--- a/src/adapter.c
++++ b/src/adapter.c
+@@ -2167,6 +2167,8 @@
+ 	adapter->filtered_discovery = false;
+ 	adapter->no_scan_restart_delay = false;
+ 	adapter->discovering = false;
++	g_free(adapter->current_discovery_filter);
++	adapter->current_discovery_filter = NULL;
+ 	g_dbus_emit_property_changed(dbus_conn, adapter->path,
+ 					ADAPTER_INTERFACE, "Discovering");
+ 
