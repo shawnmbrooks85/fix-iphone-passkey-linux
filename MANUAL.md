@@ -4,11 +4,20 @@ If you prefer not to run the automated script, here are the individual steps.
 
 ## 1. Install Build Dependencies
 
+### Ubuntu / Debian
+
 ```bash
 sudo apt update
 sudo apt install -y build-essential libreadline-dev libical-dev \
     libdbus-1-dev libudev-dev libglib2.0-dev python3-docutils \
     flex bison libdw-dev libell-dev libjson-c-dev wget
+```
+
+### Arch Linux
+
+```bash
+sudo pacman -Syu --needed --noconfirm base-devel readline libical dbus \
+    systemd glib2 python-docutils flex bison elfutils ell json-c wget pkgconf
 ```
 
 ## 2. Build BlueZ 5.77
@@ -50,6 +59,8 @@ ExecStart=
 ExecStart=/usr/libexec/bluetooth/bluetoothd --experimental -P battery
 EOF
 ```
+
+On Arch Linux, use `/usr/lib/bluetooth/bluetoothd` instead of `/usr/libexec/bluetooth/bluetoothd`.
 
 ## 5. Enable BLE Privacy
 

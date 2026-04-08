@@ -7,6 +7,7 @@ set -e
 
 MAIN_CONF="/etc/bluetooth/main.conf"
 BACKUP_SUFFIX=".bak.pre-passkey-fix"
+PACKAGE_MANAGER=""
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -15,9 +16,35 @@ NC='\033[0m'
 log()  { echo -e "${GREEN}[✓]${NC} $1"; }
 fail() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 
+detect_package_manager() {
+    if command -v apt-get >/dev/null 2>&1; then
+        PACKAGE_MANAGER="apt"
+    elif command -v pacman >/dev/null 2>&1; then
+        PACKAGE_MANAGER="pacman"
+    else
+        fail "Unsupported package manager: need apt-get or pacman"
+    fi
+}
+
+reinstall_bluez() {
+    case "${PACKAGE_MANAGER}" in
+        apt)
+            apt-get install --reinstall -y bluez > /dev/null 2>&1
+            ;;
+        pacman)
+            pacman -Syu --noconfirm bluez > /dev/null 2>&1
+            ;;
+        *)
+            fail "Package manager not detected"
+            ;;
+    esac
+}
+
 if [ "$EUID" -ne 0 ]; then
     fail "Please run as root: sudo ./rollback.sh"
 fi
+
+detect_package_manager
 
 echo "============================================="
 echo " Rollback Passkey Fix"
@@ -36,7 +63,7 @@ pkill -f ble-scan-keepalive 2>/dev/null || true
 
 # Restore stock BlueZ
 echo "Reinstalling stock BlueZ..."
-apt-get install --reinstall -y bluez > /dev/null 2>&1
+reinstall_bluez
 log "Stock BlueZ restored"
 
 # Restore original config

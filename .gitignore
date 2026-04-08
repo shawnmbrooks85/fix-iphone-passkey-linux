@@ -1,3 +1,7 @@
 *.log
 *.swp
 *.bak
+.vscode/
+.idea/
+.DS_Store
+dist/
