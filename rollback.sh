@@ -32,7 +32,7 @@ reinstall_bluez() {
             apt-get install --reinstall -y bluez > /dev/null 2>&1
             ;;
         pacman)
-            pacman -S --noconfirm bluez > /dev/null 2>&1
+            pacman -Syu --noconfirm bluez > /dev/null 2>&1
             ;;
         *)
             fail "Package manager not detected"

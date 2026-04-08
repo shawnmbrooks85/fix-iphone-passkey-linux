@@ -40,14 +40,23 @@ detect_package_manager() {
 }
 
 detect_bluetoothd_bin() {
-    BLUETOOTHD_BIN="$(command -v bluetoothd 2>/dev/null || true)"
+    BLUETOOTHD_BIN=""
 
-    if [ -z "${BLUETOOTHD_BIN}" ] && [ -x /usr/libexec/bluetooth/bluetoothd ]; then
+    if [ -x /usr/libexec/bluetooth/bluetoothd ]; then
         BLUETOOTHD_BIN="/usr/libexec/bluetooth/bluetoothd"
     fi
 
     if [ -z "${BLUETOOTHD_BIN}" ] && [ -x /usr/lib/bluetooth/bluetoothd ]; then
         BLUETOOTHD_BIN="/usr/lib/bluetooth/bluetoothd"
+    fi
+
+    if [ -z "${BLUETOOTHD_BIN}" ]; then
+        PATH_BLUETOOTHD="$(command -v bluetoothd 2>/dev/null || true)"
+        case "${PATH_BLUETOOTHD}" in
+            /usr/bin/bluetoothd|/usr/sbin/bluetoothd|/usr/libexec/bluetooth/bluetoothd|/usr/lib/bluetooth/bluetoothd)
+                BLUETOOTHD_BIN="${PATH_BLUETOOTHD}"
+                ;;
+        esac
     fi
 
     if [ -z "${BLUETOOTHD_BIN}" ]; then
@@ -62,7 +71,7 @@ install_packages() {
             apt-get install -y -qq "$@" > /dev/null 2>&1
             ;;
         pacman)
-            pacman -S --needed --noconfirm "$@" > /dev/null 2>&1
+            pacman -Syu --needed --noconfirm "$@" > /dev/null 2>&1
             ;;
         *)
             fail "Package manager not detected"
@@ -85,7 +94,7 @@ echo " BlueZ 5.72 → ${BLUEZ_VERSION} + Runtime Services"
 echo "============================================="
 echo ""
 
-CURRENT_VERSION=$(bluetoothd --version 2>/dev/null || echo "unknown")
+CURRENT_VERSION=$("${BLUETOOTHD_BIN}" --version 2>/dev/null || echo "unknown")
 echo "Current BlueZ version: ${CURRENT_VERSION}"
 echo "Target BlueZ version:  ${BLUEZ_VERSION}"
 echo ""
@@ -368,7 +377,7 @@ systemctl start ble-device-cleaner.service 2>/dev/null
 REAL_USER=$(logname 2>/dev/null || echo "${SUDO_USER:-$(whoami)}")
 su - "$REAL_USER" -c 'bluetoothctl discoverable on >/dev/null 2>&1; bluetoothctl pairable on >/dev/null 2>&1; bluetoothctl discoverable-timeout 0 >/dev/null 2>&1' 2>/dev/null
 
-NEW_VERSION=$(bluetoothd --version 2>/dev/null || echo "unknown")
+NEW_VERSION=$("${BLUETOOTHD_BIN}" --version 2>/dev/null || echo "unknown")
 SETTINGS=$(timeout 5 btmgmt info 2>/dev/null | grep "current settings" | head -1 || echo "unknown")
 
 echo ""

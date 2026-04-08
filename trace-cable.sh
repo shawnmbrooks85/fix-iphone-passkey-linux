@@ -8,14 +8,23 @@ set -euo pipefail
 HCI_DEV="${1:-hci0}"
 TS="$(date +%Y%m%d-%H%M%S)"
 OUT_DIR="/tmp/cable-trace-${TS}"
-BLUETOOTHD_BIN="$(command -v bluetoothd 2>/dev/null || true)"
+BLUETOOTHD_BIN=""
 
-if [[ -z "${BLUETOOTHD_BIN}" && -x /usr/libexec/bluetooth/bluetoothd ]]; then
+if [[ -x /usr/libexec/bluetooth/bluetoothd ]]; then
   BLUETOOTHD_BIN="/usr/libexec/bluetooth/bluetoothd"
 fi
 
 if [[ -z "${BLUETOOTHD_BIN}" && -x /usr/lib/bluetooth/bluetoothd ]]; then
   BLUETOOTHD_BIN="/usr/lib/bluetooth/bluetoothd"
+fi
+
+if [[ -z "${BLUETOOTHD_BIN}" ]]; then
+  PATH_BLUETOOTHD="$(command -v bluetoothd 2>/dev/null || true)"
+  case "${PATH_BLUETOOTHD}" in
+    /usr/bin/bluetoothd|/usr/sbin/bluetoothd|/usr/libexec/bluetooth/bluetoothd|/usr/lib/bluetooth/bluetoothd)
+      BLUETOOTHD_BIN="${PATH_BLUETOOTHD}"
+      ;;
+  esac
 fi
 
 if [[ -z "${BLUETOOTHD_BIN}" ]]; then
