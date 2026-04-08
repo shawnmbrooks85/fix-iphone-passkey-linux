@@ -1,6 +1,6 @@
 # Fix iPhone Passkey (caBLE) on Linux
 
-**Reliable iPhone passkey (WebAuthn/FIDO2 caBLE) connections on Ubuntu 24.04+ with Intel AX211 Bluetooth. Works with all Chromium-based browsers (Chrome, Brave, Edge, etc.).**
+**Reliable iPhone passkey (WebAuthn/FIDO2 caBLE) connections on Ubuntu 24.04+ and Arch Linux with Intel AX211 Bluetooth. Works with all Chromium-based browsers (Chrome, Brave, Edge, etc.).**
 
 ## The Problem
 
@@ -98,7 +98,7 @@ systemctl is-active bluetooth-privacy.service ble-device-cleaner.service passkey
 
 ## Requirements
 
-- Ubuntu 24.04+ (or any systemd-based Linux with BlueZ)
+- Ubuntu 24.04+ or Arch Linux (or any systemd-based Linux with BlueZ)
 - Intel AX211 Bluetooth adapter (or similar with MSFT HCI extensions)
 - Chromium-based browser — Chrome, Brave, Edge, etc. (Flatpak or native)
 - iPhone with passkeys configured
@@ -159,7 +159,7 @@ The Intel AX211's MSFT HCI extensions cause continuous firmware-level BLE scanni
 sudo ./rollback.sh
 ```
 
-This restores stock BlueZ from apt, reverts config, and removes all systemd services.
+This restores stock BlueZ from the system package manager, reverts config, and removes all systemd services.
 
 ## License
 

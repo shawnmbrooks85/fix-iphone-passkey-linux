@@ -8,6 +8,20 @@ set -euo pipefail
 HCI_DEV="${1:-hci0}"
 TS="$(date +%Y%m%d-%H%M%S)"
 OUT_DIR="/tmp/cable-trace-${TS}"
+BLUETOOTHD_BIN="$(command -v bluetoothd 2>/dev/null || true)"
+
+if [[ -z "${BLUETOOTHD_BIN}" && -x /usr/libexec/bluetooth/bluetoothd ]]; then
+  BLUETOOTHD_BIN="/usr/libexec/bluetooth/bluetoothd"
+fi
+
+if [[ -z "${BLUETOOTHD_BIN}" && -x /usr/lib/bluetooth/bluetoothd ]]; then
+  BLUETOOTHD_BIN="/usr/lib/bluetooth/bluetoothd"
+fi
+
+if [[ -z "${BLUETOOTHD_BIN}" ]]; then
+  echo "Could not locate bluetoothd" >&2
+  exit 1
+fi
 
 if [[ "${EUID:-0}" -ne 0 ]]; then
   echo "Run as root: sudo $0 ${HCI_DEV}" >&2
@@ -51,7 +65,7 @@ DBUS_PID="$!"
 sleep 1
 
 echo "[trace] starting bluetoothd debug..."
-/usr/libexec/bluetooth/bluetoothd -n -d --experimental -P battery >"${OUT_DIR}/bluetoothd.txt" 2>&1 &
+"${BLUETOOTHD_BIN}" -n -d --experimental -P battery >"${OUT_DIR}/bluetoothd.txt" 2>&1 &
 BTD_PID="$!"
 sleep 2
 

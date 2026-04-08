@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================================
-# Fix iPhone Passkey (caBLE) on Ubuntu 24.04 / Linux
+# Fix iPhone Passkey (caBLE) on Ubuntu 24.04 / Arch Linux / Linux
 # Upgrades BlueZ 5.72 → 5.77, applies discovery filter patch, and configures
 # all required services for reliable iPhone passkey connections.
 #
@@ -15,6 +15,8 @@ MAIN_CONF="/etc/bluetooth/main.conf"
 BACKUP_SUFFIX=".bak.pre-passkey-fix"
 BUILD_DIR="/tmp/bluez-${BLUEZ_VERSION}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PACKAGE_MANAGER=""
+BLUETOOTHD_BIN=""
 ADAPTER_DIR=""
 
 # Colors
@@ -27,11 +29,55 @@ log()  { echo -e "${GREEN}[✓]${NC} $1"; }
 warn() { echo -e "${YELLOW}[!]${NC} $1"; }
 fail() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 
+detect_package_manager() {
+    if command -v apt-get >/dev/null 2>&1; then
+        PACKAGE_MANAGER="apt"
+    elif command -v pacman >/dev/null 2>&1; then
+        PACKAGE_MANAGER="pacman"
+    else
+        fail "Unsupported package manager: need apt-get or pacman"
+    fi
+}
+
+detect_bluetoothd_bin() {
+    BLUETOOTHD_BIN="$(command -v bluetoothd 2>/dev/null || true)"
+
+    if [ -z "${BLUETOOTHD_BIN}" ] && [ -x /usr/libexec/bluetooth/bluetoothd ]; then
+        BLUETOOTHD_BIN="/usr/libexec/bluetooth/bluetoothd"
+    fi
+
+    if [ -z "${BLUETOOTHD_BIN}" ] && [ -x /usr/lib/bluetooth/bluetoothd ]; then
+        BLUETOOTHD_BIN="/usr/lib/bluetooth/bluetoothd"
+    fi
+
+    if [ -z "${BLUETOOTHD_BIN}" ]; then
+        fail "Could not locate bluetoothd"
+    fi
+}
+
+install_packages() {
+    case "${PACKAGE_MANAGER}" in
+        apt)
+            apt-get update -qq
+            apt-get install -y -qq "$@" > /dev/null 2>&1
+            ;;
+        pacman)
+            pacman -Sy --needed --noconfirm "$@" > /dev/null 2>&1
+            ;;
+        *)
+            fail "Package manager not detected"
+            ;;
+    esac
+}
+
 # --- Pre-flight checks -------------------------------------------------------
 
 if [ "$EUID" -ne 0 ]; then
     fail "Please run as root: sudo ./fix.sh"
 fi
+
+detect_package_manager
+detect_bluetoothd_bin
 
 echo "============================================="
 echo " iPhone Passkey (caBLE) Fix for Linux"
@@ -70,21 +116,36 @@ fi
 echo ""
 echo "--- Step 2: Install build dependencies ---"
 
-apt-get update -qq
-apt-get install -y -qq \
-    build-essential \
-    libreadline-dev \
-    libical-dev \
-    libdbus-1-dev \
-    libudev-dev \
-    libglib2.0-dev \
-    python3-docutils \
-    flex bison \
-    libdw-dev \
-    libell-dev \
-    libjson-c-dev \
-    wget \
-    > /dev/null 2>&1
+if [ "${PACKAGE_MANAGER}" = "apt" ]; then
+    install_packages \
+        build-essential \
+        libreadline-dev \
+        libical-dev \
+        libdbus-1-dev \
+        libudev-dev \
+        libglib2.0-dev \
+        python3-docutils \
+        flex bison \
+        libdw-dev \
+        libell-dev \
+        libjson-c-dev \
+        wget
+else
+    install_packages \
+        base-devel \
+        readline \
+        libical \
+        dbus \
+        systemd \
+        glib2 \
+        python-docutils \
+        flex bison \
+        elfutils \
+        ell \
+        json-c \
+        wget \
+        pkgconf
+fi
 log "Build dependencies installed"
 
 # --- Step 3: Download, patch, and build BlueZ --------------------------------
@@ -181,7 +242,7 @@ mkdir -p /etc/systemd/system/bluetooth.service.d
 cat > /etc/systemd/system/bluetooth.service.d/passkey-fix.conf << 'EOF'
 [Service]
 ExecStart=
-ExecStart=/usr/libexec/bluetooth/bluetoothd --experimental -P battery
+ExecStart=${BLUETOOTHD_BIN} --experimental -P battery
 EOF
 log "Systemd override created (--experimental -P battery)"
 
