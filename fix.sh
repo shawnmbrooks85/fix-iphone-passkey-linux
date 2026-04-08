@@ -62,7 +62,7 @@ install_packages() {
             apt-get install -y -qq "$@" > /dev/null 2>&1
             ;;
         pacman)
-            pacman -Sy --needed --noconfirm "$@" > /dev/null 2>&1
+            pacman -S --needed --noconfirm "$@" > /dev/null 2>&1
             ;;
         *)
             fail "Package manager not detected"
@@ -239,7 +239,7 @@ echo ""
 echo "--- Step 5: Create systemd override ---"
 
 mkdir -p /etc/systemd/system/bluetooth.service.d
-cat > /etc/systemd/system/bluetooth.service.d/passkey-fix.conf << 'EOF'
+cat > /etc/systemd/system/bluetooth.service.d/passkey-fix.conf << EOF
 [Service]
 ExecStart=
 ExecStart=${BLUETOOTHD_BIN} --experimental -P battery

@@ -16,7 +16,7 @@ sudo apt install -y build-essential libreadline-dev libical-dev \
 ### Arch Linux
 
 ```bash
-sudo pacman -Sy --needed --noconfirm base-devel readline libical dbus \
+sudo pacman -Syu --needed --noconfirm base-devel readline libical dbus \
     systemd glib2 python-docutils flex bison elfutils ell json-c wget pkgconf
 ```
 

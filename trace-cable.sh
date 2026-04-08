@@ -70,7 +70,7 @@ BTD_PID="$!"
 sleep 2
 
 echo "[trace] adapter snapshot:"
-bluetoothd --version >"${OUT_DIR}/snapshot.txt" 2>&1 || true
+"${BLUETOOTHD_BIN}" --version >"${OUT_DIR}/snapshot.txt" 2>&1 || true
 btmgmt info >>"${OUT_DIR}/snapshot.txt" 2>&1 || true
 hciconfig "${HCI_DEV}" -a >>"${OUT_DIR}/snapshot.txt" 2>&1 || true
 
